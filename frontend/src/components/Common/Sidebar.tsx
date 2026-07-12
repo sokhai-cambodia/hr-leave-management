@@ -46,7 +46,7 @@ const Sidebar = () => {
         </DrawerTrigger>
         <DrawerContent maxW="xs">
           <DrawerCloseTrigger />
-          <DrawerBody>
+          <DrawerBody overflowY="auto">
             <Flex flexDir="column" justify="space-between">
               <Box>
                 <SidebarItems onClose={() => setOpen(false)} />
@@ -79,12 +79,12 @@ const Sidebar = () => {
 
       <Box
         display={{ base: "none", md: "flex" }}
-        position="sticky"
+        flexDirection="column"
         bg="bg.subtle"
-        top={0}
         minW="xs"
-        h="100vh"
+        h="100%"
         p={4}
+        overflowY="auto"
       >
         <Box w="100%">
           <SidebarItems />

@@ -40,7 +40,7 @@ const DeleteUser = ({ id }: { id: string }) => {
       showErrorToast("An error occurred while deleting the user")
     },
     onSettled: () => {
-      queryClient.invalidateQueries()
+      queryClient.invalidateQueries({ queryKey: ["users"] })
     },
   })
 

@@ -37,6 +37,7 @@ interface ItemUpdateForm {
 
 const EditItem = ({ item }: EditItemProps) => {
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoadingRecord, setIsLoadingRecord] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast } = useCustomToast()
   const {
@@ -52,6 +53,22 @@ const EditItem = ({ item }: EditItemProps) => {
       description: item.description ?? undefined,
     },
   })
+
+  // Fetch fresh record when dialog opens
+  const fetchRecord = async () => {
+    setIsLoadingRecord(true)
+    try {
+      const freshRecord = await ItemsService.readItem({ id: item.id })
+      reset({
+        title: freshRecord.title,
+        description: freshRecord.description ?? undefined,
+      })
+    } catch (error) {
+      console.error("Failed to fetch record:", error)
+    } finally {
+      setIsLoadingRecord(false)
+    }
+  }
 
   const mutation = useMutation({
     mutationFn: (data: ItemUpdateForm) =>
@@ -73,12 +90,21 @@ const EditItem = ({ item }: EditItemProps) => {
     mutation.mutate(data)
   }
 
+  const handleOpenChange = async ({ open }: { open: boolean }) => {
+    if (open) {
+      setIsOpen(true)
+      await fetchRecord()
+    } else {
+      setIsOpen(false)
+    }
+  }
+
   return (
     <DialogRoot
       size={{ base: "xs", md: "md" }}
       placement="center"
       open={isOpen}
-      onOpenChange={({ open }) => setIsOpen(open)}
+      onOpenChange={handleOpenChange}
     >
       <DialogTrigger asChild>
         <Button variant="ghost">
@@ -87,59 +113,63 @@ const EditItem = ({ item }: EditItemProps) => {
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader>
-            <DialogTitle>Edit Item</DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            <Text mb={4}>Update the item details below.</Text>
-            <VStack gap={4}>
-              <Field
-                required
-                invalid={!!errors.title}
-                errorText={errors.title?.message}
-                label="Title"
-              >
-                <Input
-                  {...register("title", {
-                    required: "Title is required",
-                  })}
-                  placeholder="Title"
-                  type="text"
-                />
-              </Field>
-
-              <Field
-                invalid={!!errors.description}
-                errorText={errors.description?.message}
-                label="Description"
-              >
-                <Input
-                  {...register("description")}
-                  placeholder="Description"
-                  type="text"
-                />
-              </Field>
-            </VStack>
-          </DialogBody>
-
-          <DialogFooter gap={2}>
-            <ButtonGroup>
-              <DialogActionTrigger asChild>
-                <Button
-                  variant="subtle"
-                  colorPalette="gray"
-                  disabled={isSubmitting}
+        {isLoadingRecord ? (
+          <DialogBody>Loading...</DialogBody>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <DialogHeader>
+              <DialogTitle>Edit Item</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
+              <Text mb={4}>Update the item details below.</Text>
+              <VStack gap={4}>
+                <Field
+                  required
+                  invalid={!!errors.title}
+                  errorText={errors.title?.message}
+                  label="Title"
                 >
-                  Cancel
+                  <Input
+                    {...register("title", {
+                      required: "Title is required",
+                    })}
+                    placeholder="Title"
+                    type="text"
+                  />
+                </Field>
+
+                <Field
+                  invalid={!!errors.description}
+                  errorText={errors.description?.message}
+                  label="Description"
+                >
+                  <Input
+                    {...register("description")}
+                    placeholder="Description"
+                    type="text"
+                  />
+                </Field>
+              </VStack>
+            </DialogBody>
+
+            <DialogFooter gap={2}>
+              <ButtonGroup>
+                <DialogActionTrigger asChild>
+                  <Button
+                    variant="subtle"
+                    colorPalette="gray"
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                </DialogActionTrigger>
+                <Button variant="solid" type="submit" loading={isSubmitting}>
+                  Save
                 </Button>
-              </DialogActionTrigger>
-              <Button variant="solid" type="submit" loading={isSubmitting}>
-                Save
-              </Button>
-            </ButtonGroup>
-          </DialogFooter>
-        </form>
+              </ButtonGroup>
+            </DialogFooter>
+          </form>
+        )}
         <DialogCloseTrigger />
       </DialogContent>
     </DialogRoot>

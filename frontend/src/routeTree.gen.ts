@@ -15,8 +15,17 @@ import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
+import { Route as LayoutTeamsRouteImport } from './routes/_layout/teams'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutRecommendationsRouteImport } from './routes/_layout/recommendations'
+import { Route as LayoutPublicHolidaysRouteImport } from './routes/_layout/public-holidays'
+import { Route as LayoutPoliciesRouteImport } from './routes/_layout/policies'
+import { Route as LayoutLeaveTypesRouteImport } from './routes/_layout/leave-types'
+import { Route as LayoutLeaveRequestsRouteImport } from './routes/_layout/leave-requests'
+import { Route as LayoutLeavePlanRequestsRouteImport } from './routes/_layout/leave-plan-requests'
+import { Route as LayoutLeaveBalancesRouteImport } from './routes/_layout/leave-balances'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
+import { Route as LayoutHealthCheckRouteImport } from './routes/_layout/health-check'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 
 const SignupRoute = SignupRouteImport.update({
@@ -48,14 +57,59 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutTeamsRoute = LayoutTeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutRecommendationsRoute = LayoutRecommendationsRouteImport.update({
+  id: '/recommendations',
+  path: '/recommendations',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutPublicHolidaysRoute = LayoutPublicHolidaysRouteImport.update({
+  id: '/public-holidays',
+  path: '/public-holidays',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutPoliciesRoute = LayoutPoliciesRouteImport.update({
+  id: '/policies',
+  path: '/policies',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutLeaveTypesRoute = LayoutLeaveTypesRouteImport.update({
+  id: '/leave-types',
+  path: '/leave-types',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutLeaveRequestsRoute = LayoutLeaveRequestsRouteImport.update({
+  id: '/leave-requests',
+  path: '/leave-requests',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutLeavePlanRequestsRoute = LayoutLeavePlanRequestsRouteImport.update({
+  id: '/leave-plan-requests',
+  path: '/leave-plan-requests',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutLeaveBalancesRoute = LayoutLeaveBalancesRouteImport.update({
+  id: '/leave-balances',
+  path: '/leave-balances',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutItemsRoute = LayoutItemsRouteImport.update({
   id: '/items',
   path: '/items',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutHealthCheckRoute = LayoutHealthCheckRouteImport.update({
+  id: '/health-check',
+  path: '/health-check',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAdminRoute = LayoutAdminRouteImport.update({
@@ -70,8 +124,17 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/health-check': typeof LayoutHealthCheckRoute
   '/items': typeof LayoutItemsRoute
+  '/leave-balances': typeof LayoutLeaveBalancesRoute
+  '/leave-plan-requests': typeof LayoutLeavePlanRequestsRoute
+  '/leave-requests': typeof LayoutLeaveRequestsRoute
+  '/leave-types': typeof LayoutLeaveTypesRoute
+  '/policies': typeof LayoutPoliciesRoute
+  '/public-holidays': typeof LayoutPublicHolidaysRoute
+  '/recommendations': typeof LayoutRecommendationsRoute
   '/settings': typeof LayoutSettingsRoute
+  '/teams': typeof LayoutTeamsRoute
   '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesByTo {
@@ -80,8 +143,17 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
+  '/health-check': typeof LayoutHealthCheckRoute
   '/items': typeof LayoutItemsRoute
+  '/leave-balances': typeof LayoutLeaveBalancesRoute
+  '/leave-plan-requests': typeof LayoutLeavePlanRequestsRoute
+  '/leave-requests': typeof LayoutLeaveRequestsRoute
+  '/leave-types': typeof LayoutLeaveTypesRoute
+  '/policies': typeof LayoutPoliciesRoute
+  '/public-holidays': typeof LayoutPublicHolidaysRoute
+  '/recommendations': typeof LayoutRecommendationsRoute
   '/settings': typeof LayoutSettingsRoute
+  '/teams': typeof LayoutTeamsRoute
   '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesById {
@@ -92,8 +164,17 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/health-check': typeof LayoutHealthCheckRoute
   '/_layout/items': typeof LayoutItemsRoute
+  '/_layout/leave-balances': typeof LayoutLeaveBalancesRoute
+  '/_layout/leave-plan-requests': typeof LayoutLeavePlanRequestsRoute
+  '/_layout/leave-requests': typeof LayoutLeaveRequestsRoute
+  '/_layout/leave-types': typeof LayoutLeaveTypesRoute
+  '/_layout/policies': typeof LayoutPoliciesRoute
+  '/_layout/public-holidays': typeof LayoutPublicHolidaysRoute
+  '/_layout/recommendations': typeof LayoutRecommendationsRoute
   '/_layout/settings': typeof LayoutSettingsRoute
+  '/_layout/teams': typeof LayoutTeamsRoute
   '/_layout/': typeof LayoutIndexRoute
 }
 export interface FileRouteTypes {
@@ -104,8 +185,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
+    | '/health-check'
     | '/items'
+    | '/leave-balances'
+    | '/leave-plan-requests'
+    | '/leave-requests'
+    | '/leave-types'
+    | '/policies'
+    | '/public-holidays'
+    | '/recommendations'
     | '/settings'
+    | '/teams'
     | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -114,8 +204,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
+    | '/health-check'
     | '/items'
+    | '/leave-balances'
+    | '/leave-plan-requests'
+    | '/leave-requests'
+    | '/leave-types'
+    | '/policies'
+    | '/public-holidays'
+    | '/recommendations'
     | '/settings'
+    | '/teams'
     | '/'
   id:
     | '__root__'
@@ -125,8 +224,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_layout/admin'
+    | '/_layout/health-check'
     | '/_layout/items'
+    | '/_layout/leave-balances'
+    | '/_layout/leave-plan-requests'
+    | '/_layout/leave-requests'
+    | '/_layout/leave-types'
+    | '/_layout/policies'
+    | '/_layout/public-holidays'
+    | '/_layout/recommendations'
     | '/_layout/settings'
+    | '/_layout/teams'
     | '/_layout/'
   fileRoutesById: FileRoutesById
 }
@@ -182,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/teams': {
+      id: '/_layout/teams'
+      path: '/teams'
+      fullPath: '/teams'
+      preLoaderRoute: typeof LayoutTeamsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/settings': {
       id: '/_layout/settings'
       path: '/settings'
@@ -189,11 +304,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/recommendations': {
+      id: '/_layout/recommendations'
+      path: '/recommendations'
+      fullPath: '/recommendations'
+      preLoaderRoute: typeof LayoutRecommendationsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/public-holidays': {
+      id: '/_layout/public-holidays'
+      path: '/public-holidays'
+      fullPath: '/public-holidays'
+      preLoaderRoute: typeof LayoutPublicHolidaysRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/policies': {
+      id: '/_layout/policies'
+      path: '/policies'
+      fullPath: '/policies'
+      preLoaderRoute: typeof LayoutPoliciesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/leave-types': {
+      id: '/_layout/leave-types'
+      path: '/leave-types'
+      fullPath: '/leave-types'
+      preLoaderRoute: typeof LayoutLeaveTypesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/leave-requests': {
+      id: '/_layout/leave-requests'
+      path: '/leave-requests'
+      fullPath: '/leave-requests'
+      preLoaderRoute: typeof LayoutLeaveRequestsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/leave-plan-requests': {
+      id: '/_layout/leave-plan-requests'
+      path: '/leave-plan-requests'
+      fullPath: '/leave-plan-requests'
+      preLoaderRoute: typeof LayoutLeavePlanRequestsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/leave-balances': {
+      id: '/_layout/leave-balances'
+      path: '/leave-balances'
+      fullPath: '/leave-balances'
+      preLoaderRoute: typeof LayoutLeaveBalancesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/items': {
       id: '/_layout/items'
       path: '/items'
       fullPath: '/items'
       preLoaderRoute: typeof LayoutItemsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/health-check': {
+      id: '/_layout/health-check'
+      path: '/health-check'
+      fullPath: '/health-check'
+      preLoaderRoute: typeof LayoutHealthCheckRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/admin': {
@@ -208,15 +379,33 @@ declare module '@tanstack/react-router' {
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
+  LayoutHealthCheckRoute: typeof LayoutHealthCheckRoute
   LayoutItemsRoute: typeof LayoutItemsRoute
+  LayoutLeaveBalancesRoute: typeof LayoutLeaveBalancesRoute
+  LayoutLeavePlanRequestsRoute: typeof LayoutLeavePlanRequestsRoute
+  LayoutLeaveRequestsRoute: typeof LayoutLeaveRequestsRoute
+  LayoutLeaveTypesRoute: typeof LayoutLeaveTypesRoute
+  LayoutPoliciesRoute: typeof LayoutPoliciesRoute
+  LayoutPublicHolidaysRoute: typeof LayoutPublicHolidaysRoute
+  LayoutRecommendationsRoute: typeof LayoutRecommendationsRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
+  LayoutTeamsRoute: typeof LayoutTeamsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
+  LayoutHealthCheckRoute: LayoutHealthCheckRoute,
   LayoutItemsRoute: LayoutItemsRoute,
+  LayoutLeaveBalancesRoute: LayoutLeaveBalancesRoute,
+  LayoutLeavePlanRequestsRoute: LayoutLeavePlanRequestsRoute,
+  LayoutLeaveRequestsRoute: LayoutLeaveRequestsRoute,
+  LayoutLeaveTypesRoute: LayoutLeaveTypesRoute,
+  LayoutPoliciesRoute: LayoutPoliciesRoute,
+  LayoutPublicHolidaysRoute: LayoutPublicHolidaysRoute,
+  LayoutRecommendationsRoute: LayoutRecommendationsRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
+  LayoutTeamsRoute: LayoutTeamsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 

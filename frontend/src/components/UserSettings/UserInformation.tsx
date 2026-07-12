@@ -79,6 +79,11 @@ const UserInformation = () => {
         as="form"
         onSubmit={handleSubmit(onSubmit)}
       >
+        <Field label="ID">
+          <Text fontSize="md" py={2} color={!currentUser?.id ? "gray" : "inherit"} truncate maxW="sm">
+            {currentUser?.id || "N/A"}
+          </Text>
+        </Field>
         <Field label="Full name">
           {editMode ? (
             <Input

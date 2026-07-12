@@ -14,6 +14,7 @@ import { FaPlus } from "react-icons/fa"
 import { type UserCreate, UsersService } from "@/client"
 import type { ApiError } from "@/client/core/ApiError"
 import useCustomToast from "@/hooks/useCustomToast"
+import { useTeams } from "@/hooks/useTeams"
 import { emailPattern, handleError } from "@/utils"
 import { Checkbox } from "../ui/checkbox"
 import {
@@ -26,6 +27,7 @@ import {
   DialogTrigger,
 } from "../ui/dialog"
 import { Field } from "../ui/field"
+import { Select } from "../ui/select"
 
 interface UserCreateForm extends UserCreate {
   confirm_password: string
@@ -35,6 +37,7 @@ const AddUser = () => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast } = useCustomToast()
+  const { data: teams = [], isLoading: isLoadingTeams } = useTeams()
   const {
     control,
     register,
@@ -50,6 +53,7 @@ const AddUser = () => {
       full_name: "",
       password: "",
       confirm_password: "",
+      team_id: "",
       is_superuser: false,
       is_active: false,
     },
@@ -123,6 +127,29 @@ const AddUser = () => {
                   {...register("full_name")}
                   placeholder="Full name"
                   type="text"
+                />
+              </Field>
+
+              <Field
+                invalid={!!errors.team_id}
+                errorText={errors.team_id?.message}
+                label="Team"
+              >
+                <Controller
+                  control={control}
+                  name="team_id"
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      value={field.value || ""}
+                      placeholder="Select team..."
+                      options={teams.map(team => ({
+                        value: team.id,
+                        label: team.name
+                      }))}
+                      disabled={isLoadingTeams || isSubmitting}
+                    />
+                  )}
                 />
               </Field>
 

@@ -40,7 +40,7 @@ const DeleteItem = ({ id }: { id: string }) => {
       showErrorToast("An error occurred while deleting the item")
     },
     onSettled: () => {
-      queryClient.invalidateQueries()
+      queryClient.invalidateQueries({ queryKey: ["items"] })
     },
   })
 

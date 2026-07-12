@@ -2,6 +2,8 @@ import { Box, Container, Text } from "@chakra-ui/react"
 import { createFileRoute } from "@tanstack/react-router"
 
 import useAuth from "@/hooks/useAuth"
+import AdminDashboard from "@/components/Dashboard/AdminDashboard"
+import UserDashboard from "@/components/Dashboard/UserDashboard"
 
 export const Route = createFileRoute("/_layout/")({
   component: Dashboard,
@@ -18,6 +20,11 @@ function Dashboard() {
         </Text>
         <Text>Welcome back, nice to see you again!</Text>
       </Box>
+      {currentUser?.is_superuser ? (
+        <AdminDashboard />
+      ) : (
+        <UserDashboard />
+      )}
     </Container>
   )
 }

@@ -26,7 +26,7 @@ const itemsSearchSchema = z.object({
   page: z.number().catch(1),
 })
 
-const PER_PAGE = 5
+const PER_PAGE = 10
 
 function getItemsQueryOptions({ page }: { page: number }) {
   return {
