@@ -12,9 +12,7 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     healthCheckPath: /api/v1/utils/health-check/
-    dockerCommand: >-
-      bash -c "alembic upgrade head && python app/initial_data.py &&
-      fastapi run --workers 4 --port $PORT app/main.py"
+    dockerCommand: bash scripts/render-start.sh
     envVars:
       - key: PROJECT_NAME
         value: HR Leave Management
