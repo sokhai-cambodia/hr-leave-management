@@ -1,0 +1,66 @@
+databases:
+  - name: hr-leave-db
+    plan: free
+    databaseName: hr_leave
+    user: hr_leave_user
+
+services:
+  - type: web
+    name: hr-leave-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/v1/utils/health-check/
+    dockerCommand: >-
+      bash -c "alembic upgrade head && python app/initial_data.py &&
+      fastapi run --workers 4 --port $PORT app/main.py"
+    envVars:
+      - key: PROJECT_NAME
+        value: HR Leave Management
+      - key: ENVIRONMENT
+        value: local
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FIRST_SUPERUSER
+        value: admin@example.com
+      - key: FIRST_SUPERUSER_PASSWORD
+        sync: false
+      - key: FRONTEND_HOST
+        value: https://hr-leave-frontend.onrender.com
+      - key: BACKEND_CORS_ORIGINS
+        value: https://hr-leave-frontend.onrender.com
+      - key: POSTGRES_SERVER
+        fromDatabase:
+          name: hr-leave-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: hr-leave-db
+          property: port
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: hr-leave-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: hr-leave-db
+          property: password
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: hr-leave-db
+          property: database
+
+  - type: web
+    name: hr-leave-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://hr-leave-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
