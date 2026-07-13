@@ -51,7 +51,7 @@ def retrieve_me(session: SessionDep, current_user: CurrentUser) -> Any:  # type:
     service_balance.generate_balance(year=str(year))
 
     row_statement = select(LeaveBalance).where(
-        LeaveBalance.owner_id == current_user.id, LeaveBalance.year == year
+        LeaveBalance.owner_id == current_user.id, LeaveBalance.year == str(year)
     )
     rows = session.exec(row_statement).all()
     count = len(rows)
