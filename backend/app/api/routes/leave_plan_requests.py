@@ -15,6 +15,7 @@ from app.leave_models.leave_plan_request_model import (
     LeavePlanDetail,
 )
 from app.leave_services import approval_service
+from app.leave_services.notification_service import NotificationService
 from app.models import Message
 
 router = APIRouter(prefix="/leave-plan-requests", tags=["leave-plan-requests"])
@@ -236,6 +237,10 @@ def submit(
     row.approver_id = approver.id
     row.submitted_at = datetime.now()
 
+    NotificationService(session=session).notify_submitted(
+        row=row, entity_type="leave_plan_request", actor=current_user
+    )
+
     session.add(row)
     session.commit()
     session.refresh(row)
@@ -263,6 +268,10 @@ def approve(
     row.status = "approved"
     row.approval_at = datetime.now()
 
+    NotificationService(session=session).notify_approved(
+        row=row, entity_type="leave_plan_request", actor=current_user
+    )
+
     session.add(row)
     session.commit()
     session.refresh(row)
@@ -289,6 +298,10 @@ def reject(
 
     row.status = "rejected"
     row.approval_at = datetime.now()
+
+    NotificationService(session=session).notify_rejected(
+        row=row, entity_type="leave_plan_request", actor=current_user
+    )
 
     session.add(row)
     session.commit()

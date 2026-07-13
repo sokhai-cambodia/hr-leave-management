@@ -10,6 +10,7 @@ from app.leave_models.leave_plan_request_model import LeavePlanRequest
 from app.leave_models.leave_policy_model import Policy
 from app.leave_models.leave_request_model import LeaveRequest
 from app.leave_models.leave_type_model import LeaveType
+from app.leave_models.notification_model import Notification
 from app.leave_models.presentable_model import TeamPresentable
 from app.leave_models.public_holiday_model import PublicHoliday
 from app.leave_models.team_model import Team

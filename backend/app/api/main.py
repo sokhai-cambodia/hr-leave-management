@@ -5,6 +5,7 @@ from app.api.routes import (
     items,
     leave_types,
     login,
+    notifications,
     policies,
     private,
     public_holidays,
@@ -34,6 +35,7 @@ api_router.include_router(leave_plan_requests.router)
 api_router.include_router(leave_requests.router)
 api_router.include_router(approvals.router)
 api_router.include_router(schedule.router)
+api_router.include_router(notifications.router)
 
 
 if settings.ENVIRONMENT == "local":

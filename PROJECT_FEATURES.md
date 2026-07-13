@@ -18,6 +18,7 @@ Base URL: `http://<host>:8000` · API prefix: `/api/v1` · Auth: OAuth2 Bearer J
 | **Leave Requests** | Single date-range (start/end) leave request with draft → submit → approve/reject workflow; debits/credits balance automatically |
 | **Leave Plan Requests** | Multi-date leave request (a set of individual dates) with the same workflow; designed to consume the AI recommender's output directly |
 | **AI Recommendation Engine** | `GET /recommends/leave-plan` — trains a `RandomForestRegressor` per request on a generated yearly dataset (weekday, holiday, bridge-day, team workload, policy-driven preference score) and returns the top N recommended leave dates, where N = the user's remaining entitlement |
+| **Notifications** | In-app notifications for the leave/leave-plan submit → approve/reject lifecycle. No email — poll `GET /notifications/unread-count` for a badge, `GET /notifications/` for the list |
 | **Utils** | Health check, transactional test email (superuser) |
 
 ### Approval rules (shared by Leave Requests & Leave Plan Requests)
@@ -25,6 +26,7 @@ Base URL: `http://<host>:8000` · API prefix: `/api/v1` · Auth: OAuth2 Bearer J
 - **Approve / Reject**: only the assigned `approver_id`, only while `status == "pending"`.
 - **Leave Requests only**: submitting debits the leave balance; rejecting credits it back. (Leave Plan Requests do not currently touch balances on submit/reject — only checked at recommendation time.)
 - Superusers can list all records; regular users only see records where they are `owner` or `approver`.
+- Submit/approve/reject on either resource also creates an in-app `Notification` row (see §14) — submit notifies the approver, approve/reject notifies the owner. No self-notification on submit.
 
 ---
 
@@ -302,7 +304,73 @@ Auth required. Combines public holidays and the caller's team's approved leave i
 
 ---
 
-## 14. Utils — `/api/v1/utils`
+## 14. Notifications — `/api/v1/notifications`
+
+In-app notifications for the leave / leave-plan request lifecycle. In-app only — no email/push.
+Recommended client pattern: poll `GET /notifications/unread-count` on an interval (e.g. every 30s)
+for a badge count, and fetch `GET /notifications/` only when the user opens the notifications
+screen/dropdown.
+
+**Events that create a notification** (identical for `leave_request` and `leave_plan_request`):
+
+| Event | Recipient | `event_type` | `message` |
+|---|---|---|---|
+| Submit | the row's `approver_id` (line approver) | `{entity_type}.submitted` | `"{owner's name or email} submitted a {leave type} request"` |
+| Approve | the row's `owner_id` | `{entity_type}.approved` | `"Your {leave type} request was approved"` |
+| Reject | the row's `owner_id` | `{entity_type}.rejected` | `"Your {leave type} request was rejected"` |
+
+No self-notification on submit (the owner doesn't get a "you submitted" receipt). All four endpoints
+below are scoped to the caller as recipient — there is no superuser override; a superuser only ever
+sees their own notifications.
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/` | List current user's notifications, newest first. Optional `is_read` (bool), `skip`, `limit` |
+| GET | `/unread-count` | Cheap `{ "count": int }` — use this for badge polling, not `GET /` |
+| PUT | `/{id}/read` | Mark one notification as read. `403` if the caller isn't the recipient |
+| PUT | `/mark-all-read` | Mark all of the caller's unread notifications as read |
+
+**`GET /` response — `NotificationsPublic`:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "event_type": "leave_request.submitted",
+      "entity_type": "leave_request",
+      "entity_id": "uuid",
+      "message": "Jane Doe submitted a Annual Leave request",
+      "is_read": false,
+      "created_at": "2026-07-14T09:00:00",
+      "actor": { "id": "uuid", "full_name": "Jane Doe", "email": "jane@example.com" }
+    }
+  ],
+  "count": 1,
+  "unread_count": 1
+}
+```
+`count` reflects whatever `is_read` filter was applied (or the total if omitted); `unread_count` is
+always the caller's total unread count regardless of the filter — use it for the badge even when
+you're viewing a filtered list.
+
+`entity_type` is `"leave_request"` or `"leave_plan_request"` — use it (with `entity_id`) to decide
+where to navigate: `GET /leave-requests/{entity_id}` or `GET /leave-plan-requests/{entity_id}`.
+`actor` is the user who triggered the event (the submitter on a `.submitted` notification, the
+approver on `.approved`/`.rejected`) and can be `null` if that user was later deleted.
+
+**`GET /unread-count` response:**
+```json
+{ "count": 3 }
+```
+
+**`PUT /{id}/read` / `PUT /mark-all-read` response — `Message`:**
+```json
+{ "message": "Marked as read" }
+```
+
+---
+
+## 15. Utils — `/api/v1/utils`
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
@@ -311,7 +379,7 @@ Auth required. Combines public holidays and the caller's team's approved leave i
 
 ---
 
-## 15. Common Error Codes
+## 16. Common Error Codes
 
 | Status | Meaning |
 |---|---|
@@ -325,7 +393,7 @@ Auth required. Combines public holidays and the caller's team's approved leave i
 
 ---
 
-## 16. Notes for Flutter / Android Integration
+## 17. Notes for Flutter / Android Integration
 
 - Reuse the OAuth2 bearer flow as-is — no changes needed server-side for native clients.
 - An OpenAPI schema is already generated for the React frontend (see `frontend/openapi-ts.config.ts` and `scripts/generate-client.sh`); pulling `http://<host>:8000/api/v1/openapi.json` is the fastest way to generate typed Dart models instead of hand-writing them.

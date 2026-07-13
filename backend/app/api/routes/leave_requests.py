@@ -13,6 +13,7 @@ from app.leave_models.leave_request_model import (
 from app.leave_services import approval_service
 from app.leave_services.balance_service import BalanceService
 from app.leave_services.leave_service import LeaveService
+from app.leave_services.notification_service import NotificationService
 from app.models import Message
 from fastapi import APIRouter, HTTPException
 from sqlmodel import func, or_, select
@@ -233,6 +234,10 @@ def submit(
         owner_id=row.owner_id, amount=row.amount, leave_type_id=row.leave_type_id
     )
 
+    NotificationService(session=session).notify_submitted(
+        row=row, entity_type="leave_request", actor=current_user
+    )
+
     session.add(row)
     session.commit()
     session.refresh(row)
@@ -259,6 +264,10 @@ def approve(
 
     row.status = "approved"
     row.approval_at = datetime.now()
+
+    NotificationService(session=session).notify_approved(
+        row=row, entity_type="leave_request", actor=current_user
+    )
 
     session.add(row)
     session.commit()
@@ -291,6 +300,10 @@ def reject(
     service_balance = BalanceService(session=session, owner_id=current_user.id)
     service_balance.credit_balance(
         owner_id=row.owner_id, amount=row.amount, leave_type_id=row.leave_type_id
+    )
+
+    NotificationService(session=session).notify_rejected(
+        row=row, entity_type="leave_request", actor=current_user
     )
 
     session.add(row)
