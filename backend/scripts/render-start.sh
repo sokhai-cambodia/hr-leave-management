@@ -13,4 +13,4 @@ alembic upgrade head
 python app/initial_data.py
 
 # Start the server
-exec fastapi run --workers 4 --port "$PORT" app/main.py
+exec fastapi run --workers 1 --port "$PORT" app/main.py
