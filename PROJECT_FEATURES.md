@@ -152,7 +152,7 @@ Single date-range leave.
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/` | List (own + approver rows, or all if superuser) |
+| GET | `/` | List (own + approver rows, or all if superuser) — optional `status`, `owner_id`, `approver_id` query params narrow further (see below) |
 | GET | `/{id}` | Get by id |
 | POST | `/` | Create (status starts `draft`) |
 | PUT | `/{id}` | Update (owner only, `draft` only) |
@@ -160,6 +160,8 @@ Single date-range leave.
 | PUT | `/{id}/submit` | Owner submits → `pending`, assigns approver, **debits balance** |
 | PUT | `/{id}/approve` | Approver approves → `approved` |
 | PUT | `/{id}/reject` | Approver rejects → `rejected`, **credits balance back** |
+
+**`GET /` query params:** `skip`, `limit` (pagination), plus optional `status` (exact match, e.g. `?status=pending`), `owner_id`, `approver_id` (uuid) to narrow the result. These AND onto the base visibility scope (own + approver rows for non-superusers) rather than replacing it — a non-superuser passing an `owner_id`/`approver_id` that isn't their own `id` has it silently ignored, not rejected. Examples: `?owner_id=<me>&status=pending` (my own pending submissions), `?approver_id=<me>&status=pending` (items awaiting my approval).
 
 **LeaveRequestCreate**: `start_date`, `end_date` (dates), `description?`, `leave_type_id` (uuid)
 Validation on create/update: dates must resolve to a positive day count, and the user must have sufficient leave balance — otherwise `400`.
@@ -182,7 +184,7 @@ Validation on create/update: dates must resolve to a positive day count, and the
 
 ## 10. Leave Plan Requests — `/api/v1/leave-plan-requests`
 
-Multi-date leave (a set of individual `details` dates), designed to be populated from `/recommends/leave-plan` output. Same lifecycle shape as Leave Requests (`GET /`, `GET /{id}`, `POST /`, `PUT /{id}`, `DELETE /{id}`, `PUT /{id}/submit`, `PUT /{id}/approve`, `PUT /{id}/reject`).
+Multi-date leave (a set of individual `details` dates), designed to be populated from `/recommends/leave-plan` output. Same lifecycle shape as Leave Requests (`GET /`, `GET /{id}`, `POST /`, `PUT /{id}`, `DELETE /{id}`, `PUT /{id}/submit`, `PUT /{id}/approve`, `PUT /{id}/reject`), including the same `status`/`owner_id`/`approver_id` optional query params on `GET /` (identical semantics to Leave Requests above).
 
 **LeavePlanRequestCreate/Update**:
 ```json
@@ -249,7 +251,58 @@ Sorted by `day_of_year` ascending (chronological) in the final response.
 
 ---
 
-## 12. Utils — `/api/v1/utils`
+## 12. Approvals — `/api/v1/approvals`
+
+### `GET /approvals/pending-count`
+Auth required. Cheap combined count (no row hydration) of pending items assigned to the caller as approver — for a nav badge, not the queue itself (use `GET /leave-requests/?approver_id=<me>&status=pending` + the leave-plan equivalent for the actual list).
+
+**Response:**
+```json
+{ "leave_requests": 3, "leave_plan_requests": 1, "total": 4 }
+```
+
+---
+
+## 13. Schedule — `/api/v1/schedule`
+
+### `GET /schedule/?year=<int>&month=<int 1-12>`
+Auth required. Combines public holidays and the caller's team's approved leave into one payload for a month calendar view.
+
+- `public_holidays`: `PublicHolidayPublic` rows whose `date` falls in the given month.
+- `team_leave`: unifies `LeaveRequest` (a real date range) and `LeavePlanRequest` (one entry per detail date) into one flat shape, filtered to `status == "approved"` and `team_id == current_user.team_id`. Empty list (not an error) if the caller has no team. Entries whose range *overlaps* the queried month are included, not just ones starting inside it (e.g. a request spanning Jun 29–Jul 2 appears when querying July too).
+
+**Response:**
+```json
+{
+  "year": 2026,
+  "month": 7,
+  "public_holidays": [
+    { "id": "uuid", "date": "2026-07-04", "name": "Independence Day", "description": null }
+  ],
+  "team_leave": [
+    {
+      "id": "uuid",
+      "source": "leave_request",
+      "owner": { "id", "full_name", "email" },
+      "leave_type": { "id", "code", "name" },
+      "start_date": "2026-07-10",
+      "end_date": "2026-07-12"
+    },
+    {
+      "id": "uuid",
+      "source": "leave_plan_request",
+      "owner": { "id", "full_name", "email" },
+      "leave_type": { "id", "code", "name" },
+      "start_date": "2026-07-20",
+      "end_date": "2026-07-20"
+    }
+  ]
+}
+```
+
+---
+
+## 14. Utils — `/api/v1/utils`
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
@@ -258,7 +311,7 @@ Sorted by `day_of_year` ascending (chronological) in the final response.
 
 ---
 
-## 13. Common Error Codes
+## 15. Common Error Codes
 
 | Status | Meaning |
 |---|---|
@@ -272,7 +325,7 @@ Sorted by `day_of_year` ascending (chronological) in the final response.
 
 ---
 
-## 14. Notes for Flutter / Android Integration
+## 16. Notes for Flutter / Android Integration
 
 - Reuse the OAuth2 bearer flow as-is — no changes needed server-side for native clients.
 - An OpenAPI schema is already generated for the React frontend (see `frontend/openapi-ts.config.ts` and `scripts/generate-client.sh`); pulling `http://<host>:8000/api/v1/openapi.json` is the fastest way to generate typed Dart models instead of hand-writing them.

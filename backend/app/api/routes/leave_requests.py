@@ -26,40 +26,50 @@ def list(
     current_user: CurrentUser,
     skip: int = 0,
     limit: int = 100,
+    status: str | None = None,
+    owner_id: uuid.UUID | None = None,
+    approver_id: uuid.UUID | None = None,
 ) -> Any:
     """
-    Retrieve Items.
+    Retrieve Items. Optional status/owner_id/approver_id narrow the result
+    further - non-superusers passing an owner_id/approver_id other than
+    their own id have it ignored (not an error), since the base visibility
+    scope below already limits them to their own + approver rows.
     """
 
     if current_user.is_superuser:
         count_statement = select(func.count()).select_from(LeaveRequest)
-        count = session.exec(count_statement).one()
-        statement = select(LeaveRequest).offset(skip).limit(limit)
-        rows = session.exec(statement).all()
+        statement = select(LeaveRequest)
     else:
+        visibility = or_(
+            LeaveRequest.owner_id == current_user.id,
+            LeaveRequest.approver_id == current_user.id,
+        )
         count_statement = (
-            select(func.count())
-            .select_from(LeaveRequest)
-            .where(
-                or_(
-                    LeaveRequest.owner_id == current_user.id,
-                    LeaveRequest.approver_id == current_user.id,
-                )
-            )
+            select(func.count()).select_from(LeaveRequest).where(visibility)
         )
-        count = session.exec(count_statement).one()
-        statement = (
-            select(LeaveRequest)
-            .where(
-                or_(
-                    LeaveRequest.owner_id == current_user.id,
-                    LeaveRequest.approver_id == current_user.id,
-                )
-            )
-            .offset(skip)
-            .limit(limit)
+        statement = select(LeaveRequest).where(visibility)
+
+    if status is not None:
+        count_statement = count_statement.where(LeaveRequest.status == status)
+        statement = statement.where(LeaveRequest.status == status)
+
+    if owner_id is not None and (
+        current_user.is_superuser or owner_id == current_user.id
+    ):
+        count_statement = count_statement.where(LeaveRequest.owner_id == owner_id)
+        statement = statement.where(LeaveRequest.owner_id == owner_id)
+
+    if approver_id is not None and (
+        current_user.is_superuser or approver_id == current_user.id
+    ):
+        count_statement = count_statement.where(
+            LeaveRequest.approver_id == approver_id
         )
-        rows = session.exec(statement).all()
+        statement = statement.where(LeaveRequest.approver_id == approver_id)
+
+    count = session.exec(count_statement).one()
+    rows = session.exec(statement.offset(skip).limit(limit)).all()
 
     return LeaveRequestsPublic(data=rows, count=count)
 
