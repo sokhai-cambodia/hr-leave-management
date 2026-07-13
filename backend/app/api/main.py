@@ -1,12 +1,14 @@
 from fastapi import APIRouter
 
 from app.api.routes import (
+    approvals,
     items,
     leave_types,
     login,
     policies,
     private,
     public_holidays,
+    schedule,
     teams,
     users,
     utils,
@@ -30,6 +32,8 @@ api_router.include_router(recommends.router)
 api_router.include_router(leave_balances.router)
 api_router.include_router(leave_plan_requests.router)
 api_router.include_router(leave_requests.router)
+api_router.include_router(approvals.router)
+api_router.include_router(schedule.router)
 
 
 if settings.ENVIRONMENT == "local":
