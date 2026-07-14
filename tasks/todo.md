@@ -50,10 +50,16 @@ work is blocked on this landing first.
       (`app/api/routes/users.py`), mirroring the existing email-uniqueness checks
 - [x] C6 — `test_get_access_token_by_username` added to `tests/api/routes/test_login.py` (NOT run —
       same environment blocker as above)
-- [ ] C7 — `render.yaml`: Resend SMTP env vars added for real password-reset email delivery in
-      production; `SMTP_PASSWORD` is `sync: false` (secret, not in git) — **you still need to** sign
-      up at resend.com, generate an API key, and paste it into the Render dashboard for the
+- [x] C7 — `render.yaml`: Resend SMTP env vars added for real password-reset email delivery in
+      production; `SMTP_PASSWORD` is `sync: false` (secret, not in git) — user signed up at
+      resend.com; still needs to paste the API key into the Render dashboard for the
       `hr-leave-backend` service before this actually works
+- **Decision (2026-07-14):** staying on Resend's sandbox address (`onboarding@resend.dev`) rather
+  than verifying a custom domain — `hr-leave-frontend.onrender.com`/`hr-leave-backend.onrender.com`
+  are Render-owned subdomains, not a domain the user controls DNS for, so they can't be verified
+  with Resend. Sandbox mode only delivers to the Resend account owner's own email, **not** to
+  teammates' or other users' real addresses — team members can't receive real forgot-password
+  emails yet. Revisit by buying an actual domain (~$10/yr) if/when that becomes a real blocker.
 
 ## Environment blocker (same as above, 2026-07-14)
 Same no-venv/no-.env situation - C1-C6 were only written, not run. Before merging: run the
