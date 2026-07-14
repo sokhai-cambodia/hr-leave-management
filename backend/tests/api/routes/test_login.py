@@ -102,6 +102,29 @@ def test_reset_password(client: TestClient, db: Session) -> None:
     assert verify_password(new_password, user.hashed_password)
 
 
+def test_get_access_token_by_username(client: TestClient, db: Session) -> None:
+    email = random_email()
+    password = random_lower_string()
+    username = random_lower_string()
+
+    user_create = UserCreate(
+        email=email,
+        username=username,
+        full_name="Test User",
+        password=password,
+        is_active=True,
+        is_superuser=False,
+    )
+    create_user(session=db, user_create=user_create)
+
+    login_data = {"username": username, "password": password}
+    r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
+    tokens = r.json()
+    assert r.status_code == 200
+    assert "access_token" in tokens
+    assert tokens["access_token"]
+
+
 def test_reset_password_invalid_token(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:

@@ -27,3 +27,36 @@ written, following existing patterns closely. Before merging: run the migration,
 `bash scripts/lint.sh` + `bash scripts/test.sh`, run `./scripts/generate-client.sh` against a live
 backend and delete `notificationsService.ts` in favor of the generated client, then do the B5
 walkthrough.
+
+---
+
+# Todo: Account & Identity Enhancements (backend-only; requested from the Flutter client repo)
+
+See `tasks/plan.md` (same section) for full detail. Driven by
+`hr-leave-management-flutter/tasks/plan.md` Phase 13 (13.2/13.3/13.4-backend) — that repo's Flutter
+work is blocked on this landing first.
+
+## Backend
+- [x] C1 — `User.username` (unique, admin-only) + `User.phone_number` (self-editable via
+      `UserUpdateMe`) added to `UserBase` (`app/models.py`)
+- [x] C2 — Alembic migration `e91b6a2d5f3c_add_username_and_phone_number_to_user.py` (hand-written,
+      NOT run — no local venv; verify with `alembic upgrade head` before merging)
+- [x] C3 — `crud.get_user_by_username`, `crud.get_user_by_identifier`,
+      `crud.authenticate_by_identifier` (existing `crud.authenticate`/`get_user_by_email` untouched,
+      so existing tests calling them don't need changes)
+- [x] C4 — `POST /login/access-token` now authenticates by username-or-email via
+      `authenticate_by_identifier` (`app/api/routes/login.py`)
+- [x] C5 — Username uniqueness checks on admin `POST /users/` and `PATCH /users/{id}`
+      (`app/api/routes/users.py`), mirroring the existing email-uniqueness checks
+- [x] C6 — `test_get_access_token_by_username` added to `tests/api/routes/test_login.py` (NOT run —
+      same environment blocker as above)
+- [ ] C7 — `render.yaml`: Resend SMTP env vars added for real password-reset email delivery in
+      production; `SMTP_PASSWORD` is `sync: false` (secret, not in git) — **you still need to** sign
+      up at resend.com, generate an API key, and paste it into the Render dashboard for the
+      `hr-leave-backend` service before this actually works
+
+## Environment blocker (same as above, 2026-07-14)
+Same no-venv/no-.env situation - C1-C6 were only written, not run. Before merging: run the
+migration, run `bash scripts/lint.sh` + `bash scripts/test.sh`, then manually verify (log in with a
+test account's username instead of email; confirm an admin can set/edit a username and phone number
+via the admin Users screen once the Flutter side lands).

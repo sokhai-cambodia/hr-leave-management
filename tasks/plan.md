@@ -181,3 +181,102 @@ other's team owner, drive: submit → approver sees badge/dropdown entry → app
 badge/dropdown entry. Repeat once for reject. Confirm mark-all-read and navigation both work.
 Report results in chat; do not mark the feature done without this pass per CLAUDE.md's UI-change
 testing requirement.
+
+---
+
+# Plan: Account & Identity Enhancements (backend-only)
+
+Source: `hr-leave-management-flutter/tasks/plan.md` Phase 13 (13.2-backend, 13.3-backend, 13.4) —
+three features requested from the Flutter client that need backend changes here first. No frontend
+(React) work in this pass; the Flutter side is the consumer and stays blocked until this lands.
+
+## Dependency graph
+
+```
+C1 User.username + User.phone_number on UserBase/UserUpdateMe
+  └─ C2 Migration (needs C1)
+       └─ C3 crud.get_user_by_username / get_user_by_identifier / authenticate_by_identifier
+            ├─ C4 login.py uses authenticate_by_identifier (needs C3)
+            ├─ C5 users.py username-uniqueness checks on admin create/update (needs C3)
+            └─ C6 test_login.py: username-login test (needs C4)
+C7 render.yaml SMTP env vars (independent - infra only, no code dependency)
+```
+
+## C1 — `User.username` + `User.phone_number`
+
+**File:** `backend/app/models.py`
+
+`username: str | None` added to `UserBase` (unique, indexed, max 64) — lands in `UserCreate`,
+`UserUpdate` (both admin-facing schemas already inherit `UserBase`) and `UserPublic`
+automatically, but deliberately **not** added to `UserUpdateMe` (own separate field list, not
+`UserBase`-derived) so it stays admin-only, matching how `team_id` already works.
+
+`phone_number: str | None` also added to `UserBase` (max 32, no uniqueness) for the same
+admin-editable-by-default reasoning, **and** explicitly added to `UserUpdateMe` too so the user can
+self-edit their own phone number (needed for the Flutter QR business-card feature).
+
+**Acceptance criteria:** both fields optional/nullable (no backfill required for existing rows);
+`username` has a unique index; `phone_number` does not.
+
+## C2 — Alembic migration
+
+**File:** `backend/app/alembic/versions/e91b6a2d5f3c_add_username_and_phone_number_to_user.py`
+
+Chains off `b7f3a9d21c44` (the notification-model migration, current head at time of writing) —
+adds both columns nullable, plus a unique index on `username` (mirrors the `ix_user_email` pattern
+from `e2412789c190_initialize_models.py`). Hand-written, **not run** (see environment blocker in
+`tasks/todo.md`) — verify with `alembic upgrade head` / `alembic downgrade -1` round-trip before
+merging.
+
+## C3 — `crud.py` additions
+
+**File:** `backend/app/crud.py`
+
+New `get_user_by_username`, `get_user_by_identifier` (tries username first, falls back to email),
+and `authenticate_by_identifier` — all additive. The existing `authenticate`/`get_user_by_email`
+are untouched on purpose, so `tests/crud/test_user.py` (which calls `crud.authenticate(email=...)`
+directly) doesn't need to change.
+
+## C4 — Login route uses identifier-based auth
+
+**File:** `backend/app/api/routes/login.py`
+
+`POST /login/access-token` now calls `crud.authenticate_by_identifier` instead of
+`crud.authenticate`, passing `form_data.username` (the OAuth2 form field, semantically "whatever
+the client typed") straight through — no client-side hint needed about which one it is.
+
+**Acceptance criteria:** logging in with either a user's email or their username succeeds;
+incorrect credentials still 400 with a (now slightly reworded) "Incorrect email/username or
+password".
+
+## C5 — Username uniqueness on admin routes
+
+**File:** `backend/app/api/routes/users.py`
+
+`create_user`/`update_user` (both superuser-only) gain a username-uniqueness pre-check mirroring
+the existing email one — 400 on create-conflict, 409 on update-conflict, matching the existing
+email-conflict status codes exactly so client error handling doesn't need special-casing.
+
+## C6 — Test coverage
+
+**File:** `backend/tests/api/routes/test_login.py`
+
+`test_get_access_token_by_username` — creates a user with both `email` and `username` set, logs in
+using only the username, asserts a token comes back. Hand-written, not run (same environment
+blocker).
+
+## C7 — Real SMTP via Resend (infra, not code)
+
+**File:** `render.yaml`
+
+Adds `SMTP_HOST`/`SMTP_PORT`/`SMTP_TLS`/`SMTP_USER`/`EMAILS_FROM_EMAIL`/`EMAILS_FROM_NAME` for
+Resend's SMTP relay (`smtp.resend.com:587`) — no backend code changes needed, `app/utils.py`'s
+`send_email()` already reads these via `app/core/config.py`. `SMTP_PASSWORD` is `sync: false`
+(Render prompts for it in the dashboard, never stored in git) — **a human still needs to** sign up
+at resend.com, generate an API key, and paste it in. `EMAILS_FROM_EMAIL` defaults to Resend's
+sandbox address (`onboarding@resend.dev`), which only delivers in Resend's test mode — swap to a
+verified sending domain for real delivery to arbitrary recipients.
+
+**Acceptance criteria:** once the API key is set, a forgot-password request against the deployed
+backend delivers a real email with a working reset link (manual verify, can't be done from this
+environment).

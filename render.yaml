@@ -28,6 +28,27 @@ services:
         value: https://hr-leave-frontend.onrender.com
       - key: BACKEND_CORS_ORIGINS
         value: https://hr-leave-frontend.onrender.com
+      # Forgot/reset-password email, via Resend's SMTP relay (resend.com) -
+      # free tier covers course-project volume, no backend code changes
+      # needed. Sign up, generate an API key, and set SMTP_PASSWORD to it in
+      # the Render dashboard (kept out of this file since it's a secret).
+      # Swap EMAILS_FROM_EMAIL to a verified sending domain once you have
+      # one - resend.dev's sandbox address only works for Resend's own
+      # test/dev mode, not arbitrary recipients.
+      - key: SMTP_HOST
+        value: smtp.resend.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_TLS
+        value: "true"
+      - key: SMTP_USER
+        value: resend
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAILS_FROM_EMAIL
+        value: onboarding@resend.dev
+      - key: EMAILS_FROM_NAME
+        value: HR Leave Management
       - key: POSTGRES_SERVER
         fromDatabase:
           name: hr-leave-db

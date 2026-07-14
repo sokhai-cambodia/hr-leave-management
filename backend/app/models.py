@@ -22,6 +22,13 @@ class UserBase(SQLModel):
     is_active: bool = True
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
+    # Admin-set only (not on UserUpdateMe) - lets users log in with either
+    # this or their email, without giving them a second self-editable
+    # identity field to fight over.
+    username: str | None = Field(default=None, unique=True, index=True, max_length=64)
+    # Self-editable via UserUpdateMe - used for the QR business-card feature
+    # (Telegram deep link needs an E.164-formatted number).
+    phone_number: str | None = Field(default=None, max_length=32)
     team_id: uuid.UUID | None = Field(
         foreign_key="team.id", default=None, nullable=True, ondelete="SET NULL"
     )
@@ -47,6 +54,7 @@ class UserUpdate(UserBase):
 class UserUpdateMe(SQLModel):
     full_name: str | None = Field(default=None, max_length=255)
     email: EmailStr | None = Field(default=None, max_length=255)
+    phone_number: str | None = Field(default=None, max_length=32)
 
 
 class UpdatePassword(SQLModel):

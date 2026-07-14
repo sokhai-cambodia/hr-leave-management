@@ -37,8 +37,35 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
     return session_user
 
 
+def get_user_by_username(*, session: Session, username: str) -> User | None:
+    statement = select(User).where(User.username == username)
+    session_user = session.exec(statement).first()
+    return session_user
+
+
+def get_user_by_identifier(*, session: Session, identifier: str) -> User | None:
+    """Looks up a user by username first, falling back to email - lets the
+    login form accept either without the client having to say which one it
+    sent."""
+    user = get_user_by_username(session=session, username=identifier)
+    if user:
+        return user
+    return get_user_by_email(session=session, email=identifier)
+
+
 def authenticate(*, session: Session, email: str, password: str) -> User | None:
     db_user = get_user_by_email(session=session, email=email)
+    if not db_user:
+        return None
+    if not verify_password(password, db_user.hashed_password):
+        return None
+    return db_user
+
+
+def authenticate_by_identifier(
+    *, session: Session, identifier: str, password: str
+) -> User | None:
+    db_user = get_user_by_identifier(session=session, identifier=identifier)
     if not db_user:
         return None
     if not verify_password(password, db_user.hashed_password):

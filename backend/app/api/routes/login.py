@@ -26,13 +26,17 @@ def login_access_token(
     session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> Token:
     """
-    OAuth2 compatible token login, get an access token for future requests
+    OAuth2 compatible token login, get an access token for future requests.
+    `form_data.username` is the OAuth2 spec's field name, not a claim about
+    what's in it - accepts either the user's email or their username.
     """
-    user = crud.authenticate(
-        session=session, email=form_data.username, password=form_data.password
+    user = crud.authenticate_by_identifier(
+        session=session, identifier=form_data.username, password=form_data.password
     )
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+        raise HTTPException(
+            status_code=400, detail="Incorrect email/username or password"
+        )
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
