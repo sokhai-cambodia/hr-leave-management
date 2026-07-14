@@ -40,12 +40,14 @@ function UsersTable() {
     return users.filter((user) => {
       const fullName = user.full_name?.toLowerCase() || ""
       const email = user.email.toLowerCase()
+      const username = user.username?.toLowerCase() || ""
       const teamName = user.team?.name?.toLowerCase() || ""
       const teamOwnerName = user.team?.team_owner?.full_name?.toLowerCase() || ""
       const teamOwnerEmail = user.team?.team_owner?.email?.toLowerCase() || ""
       return (
         fullName.includes(searchTerm) ||
         email.includes(searchTerm) ||
+        username.includes(searchTerm) ||
         teamName.includes(searchTerm) ||
         teamOwnerName.includes(searchTerm) ||
         teamOwnerEmail.includes(searchTerm)
@@ -73,6 +75,8 @@ function UsersTable() {
           <Table.Row>
             <Table.ColumnHeader w="sm">Full name</Table.ColumnHeader>
             <Table.ColumnHeader w="sm">Email</Table.ColumnHeader>
+            <Table.ColumnHeader w="sm">Username</Table.ColumnHeader>
+            <Table.ColumnHeader w="sm">Phone Number</Table.ColumnHeader>
             <Table.ColumnHeader w="sm">Team</Table.ColumnHeader>
             <Table.ColumnHeader w="sm">Team Owner Name</Table.ColumnHeader>
             <Table.ColumnHeader w="sm">Team Owner Email</Table.ColumnHeader>
@@ -115,6 +119,12 @@ function UsersTable() {
               </Table.Cell>
               <Table.Cell truncate maxW="sm">
                 {user.email}
+              </Table.Cell>
+              <Table.Cell color={!user.username ? "gray" : "inherit"}>
+                {user.username || "N/A"}
+              </Table.Cell>
+              <Table.Cell color={!user.phone_number ? "gray" : "inherit"}>
+                {user.phone_number || "N/A"}
               </Table.Cell>
               <Table.Cell>
                 {user.team ? (

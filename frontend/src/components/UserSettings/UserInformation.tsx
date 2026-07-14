@@ -39,6 +39,7 @@ const UserInformation = () => {
     defaultValues: {
       full_name: currentUser?.full_name,
       email: currentUser?.email,
+      phone_number: currentUser?.phone_number,
     },
   })
 
@@ -121,6 +122,37 @@ const UserInformation = () => {
           ) : (
             <Text fontSize="md" py={2} truncate maxW="sm">
               {currentUser?.email}
+            </Text>
+          )}
+        </Field>
+        <Field mt={4} label="Username">
+          <Text
+            fontSize="md"
+            py={2}
+            color={!currentUser?.username ? "gray" : "inherit"}
+            truncate
+            maxW="sm"
+          >
+            {currentUser?.username || "N/A"}
+          </Text>
+        </Field>
+        <Field mt={4} label="Phone Number">
+          {editMode ? (
+            <Input
+              {...register("phone_number")}
+              type="tel"
+              size="md"
+              placeholder="+1234567890"
+            />
+          ) : (
+            <Text
+              fontSize="md"
+              py={2}
+              color={!currentUser?.phone_number ? "gray" : "inherit"}
+              truncate
+              maxW="sm"
+            >
+              {currentUser?.phone_number || "N/A"}
             </Text>
           )}
         </Field>

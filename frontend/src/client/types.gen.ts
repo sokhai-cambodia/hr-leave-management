@@ -66,6 +66,8 @@ export type UserCreate = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    username?: (string | null);
+    phone_number?: (string | null);
     team_id?: (string | null);
     password: string;
 };
@@ -75,6 +77,8 @@ export type UserPublic = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    username?: (string | null);
+    phone_number?: (string | null);
     team_id?: (string | null);
     id: string;
     team?: {
@@ -104,6 +108,8 @@ export type UserUpdate = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    username?: (string | null);
+    phone_number?: (string | null);
     team_id?: (string | null);
     password?: (string | null);
 };
@@ -111,6 +117,7 @@ export type UserUpdate = {
 export type UserUpdateMe = {
     full_name?: (string | null);
     email?: (string | null);
+    phone_number?: (string | null);
 };
 
 export type ValidationError = {

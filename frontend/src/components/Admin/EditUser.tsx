@@ -70,6 +70,8 @@ const EditUser = ({ user }: EditUserProps) => {
       reset({
         email: freshRecord.email,
         full_name: freshRecord.full_name,
+        username: freshRecord.username,
+        phone_number: freshRecord.phone_number,
         team_id: freshRecord.team_id || "",
         is_superuser: freshRecord.is_superuser,
         is_active: freshRecord.is_active,
@@ -170,6 +172,30 @@ const EditUser = ({ user }: EditUserProps) => {
                     {...register("full_name")}
                     placeholder="Full name"
                     type="text"
+                  />
+                </Field>
+
+                <Field
+                  invalid={!!errors.username}
+                  errorText={errors.username?.message}
+                  label="Username"
+                >
+                  <Input
+                    {...register("username")}
+                    placeholder="Username"
+                    type="text"
+                  />
+                </Field>
+
+                <Field
+                  invalid={!!errors.phone_number}
+                  errorText={errors.phone_number?.message}
+                  label="Phone Number"
+                >
+                  <Input
+                    {...register("phone_number")}
+                    placeholder="+1234567890"
+                    type="tel"
                   />
                 </Field>
 
