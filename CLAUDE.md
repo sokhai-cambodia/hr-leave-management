@@ -52,6 +52,12 @@ docker compose watch       # start db/backend/frontend/adminer/traefik with live
 
 Pre-commit (`.pre-commit-config.yaml`) runs ruff, ruff-format, and `cd frontend && npm run lint` (Biome) — install with `uv run pre-commit install` from `backend/`. `frontend/src/client/**` is excluded from formatting hooks since it's generated code.
 
+## Git commits
+
+- This is a MIT master's final project submission — commits must look like normal solo authorship, not AI-assisted.
+- **Never** add `Co-Authored-By: Claude` (or any AI attribution) to commit messages.
+- **Never** mention Claude, Claude Code, or AI assistance in commit messages, PR descriptions, or code comments.
+
 ## Architecture
 
 ### Backend domain layout
