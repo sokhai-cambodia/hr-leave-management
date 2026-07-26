@@ -12,6 +12,7 @@ from app.leave_models.public_holiday_model import (
     PublicHolidaysPublic,
     PublicHolidayUpdate,
 )
+from app.leave_services.audit_service import AuditService
 from app.models import Message
 
 router = APIRouter(prefix="/public-holidays", tags=["public-holidays"])
@@ -64,6 +65,13 @@ def create(
 
     row = PublicHoliday.model_validate(row_in, update={"owner_id": current_user.id})
     session.add(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="create",
+        entity_type="public_holiday",
+        entity_id=row.id,
+        summary=f"{current_user.email} created public holiday {row.name} ({row.date})",
+    )
     session.commit()
     session.refresh(row)
     return row
@@ -90,6 +98,13 @@ def update(
     update_dict = row_in.model_dump(exclude_unset=True)
     row.sqlmodel_update(update_dict)
     session.add(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="update",
+        entity_type="public_holiday",
+        entity_id=row.id,
+        summary=f"{current_user.email} updated public holiday {row.name} ({row.date})",
+    )
     session.commit()
     session.refresh(row)
     return row
@@ -112,5 +127,12 @@ def delete(
         raise HTTPException(status_code=404, detail="Not found")
 
     session.delete(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="delete",
+        entity_type="public_holiday",
+        entity_id=row.id,
+        summary=f"{current_user.email} deleted public holiday {row.name} ({row.date})",
+    )
     session.commit()
     return Message(message="Deleted successfully")

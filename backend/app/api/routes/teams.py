@@ -12,6 +12,7 @@ from app.leave_models.team_model import (
     TeamsPublic,
     TeamUpdate,
 )
+from app.leave_services.audit_service import AuditService
 from app.models import Message
 
 router = APIRouter(prefix="/teams", tags=["teams"])
@@ -64,6 +65,13 @@ def create(
 
     row = Team.model_validate(row_in, update={"owner_id": current_user.id})
     session.add(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="create",
+        entity_type="team",
+        entity_id=row.id,
+        summary=f"{current_user.email} created team {row.name}",
+    )
     session.commit()
     session.refresh(row)
     return row
@@ -92,6 +100,13 @@ def update(
     update_dict = row_in.model_dump(exclude_unset=True)
     row.sqlmodel_update(update_dict)
     session.add(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="update",
+        entity_type="team",
+        entity_id=row.id,
+        summary=f"{current_user.email} updated team {row.name}",
+    )
     session.commit()
     session.refresh(row)
     return row
@@ -114,5 +129,12 @@ def delete(
         raise HTTPException(status_code=404, detail="Not found")
 
     session.delete(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="delete",
+        entity_type="team",
+        entity_id=row.id,
+        summary=f"{current_user.email} deleted team {row.name}",
+    )
     session.commit()
     return Message(message="Deleted successfully")

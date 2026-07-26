@@ -12,6 +12,7 @@ from app.leave_models.leave_policy_model import (
     PolicyPublic,
     PolicyUpdate,
 )
+from app.leave_services.audit_service import AuditService
 from app.models import Message
 
 router = APIRouter(prefix="/policies", tags=["policies"])
@@ -64,6 +65,13 @@ def create(
 
     row = Policy.model_validate(row_in, update={"owner_id": current_user.id})
     session.add(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="create",
+        entity_type="policy",
+        entity_id=row.id,
+        summary=f"{current_user.email} created policy {row.code}",
+    )
     session.commit()
     session.refresh(row)
     return row
@@ -90,6 +98,13 @@ def update(
     update_dict = row_in.model_dump(exclude_unset=True)
     row.sqlmodel_update(update_dict)
     session.add(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="update",
+        entity_type="policy",
+        entity_id=row.id,
+        summary=f"{current_user.email} updated policy {row.code}",
+    )
     session.commit()
     session.refresh(row)
     return row
@@ -112,5 +127,12 @@ def delete(
         raise HTTPException(status_code=404, detail="Not found")
 
     session.delete(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="delete",
+        entity_type="policy",
+        entity_id=row.id,
+        summary=f"{current_user.email} deleted policy {row.code}",
+    )
     session.commit()
     return Message(message="Deleted successfully")

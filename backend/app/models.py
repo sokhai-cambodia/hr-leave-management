@@ -5,6 +5,7 @@ from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
 
 # Register Models
+from app.leave_models.audit_log_model import AuditLog
 from app.leave_models.leave_balance_model import LeaveBalance
 from app.leave_models.leave_plan_request_model import LeavePlanRequest
 from app.leave_models.leave_policy_model import Policy

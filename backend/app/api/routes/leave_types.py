@@ -12,6 +12,7 @@ from app.leave_models.leave_type_model import (
     LeaveTypesPublic,
     LeaveTypeUpdate,
 )
+from app.leave_services.audit_service import AuditService
 from app.models import Message
 
 router = APIRouter(prefix="/leave-types", tags=["leave-types"])
@@ -64,6 +65,13 @@ def create(
 
     row = LeaveType.model_validate(row_in, update={"owner_id": current_user.id})
     session.add(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="create",
+        entity_type="leave_type",
+        entity_id=row.id,
+        summary=f"{current_user.email} created leave type {row.name}",
+    )
     session.commit()
     session.refresh(row)
     return row
@@ -90,6 +98,13 @@ def update(
     update_dict = row_in.model_dump(exclude_unset=True)
     row.sqlmodel_update(update_dict)
     session.add(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="update",
+        entity_type="leave_type",
+        entity_id=row.id,
+        summary=f"{current_user.email} updated leave type {row.name}",
+    )
     session.commit()
     session.refresh(row)
     return row
@@ -112,5 +127,12 @@ def delete(
         raise HTTPException(status_code=404, detail="Not found")
 
     session.delete(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="delete",
+        entity_type="leave_type",
+        entity_id=row.id,
+        summary=f"{current_user.email} deleted leave type {row.name}",
+    )
     session.commit()
     return Message(message="Deleted successfully")

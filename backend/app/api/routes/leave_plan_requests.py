@@ -15,6 +15,7 @@ from app.leave_models.leave_plan_request_model import (
     LeavePlanDetail,
 )
 from app.leave_services import approval_service
+from app.leave_services.audit_service import AuditService
 from app.leave_services.notification_service import NotificationService
 from app.models import Message
 
@@ -240,6 +241,13 @@ def submit(
     NotificationService(session=session).notify_submitted(
         row=row, entity_type="leave_plan_request", actor=current_user
     )
+    AuditService(session=session).record(
+        actor=current_user,
+        action="submit",
+        entity_type="leave_plan_request",
+        entity_id=row.id,
+        summary=f"{current_user.email} submitted a leave plan request ({row.amount} date(s))",
+    )
 
     session.add(row)
     session.commit()
@@ -271,6 +279,13 @@ def approve(
     NotificationService(session=session).notify_approved(
         row=row, entity_type="leave_plan_request", actor=current_user
     )
+    AuditService(session=session).record(
+        actor=current_user,
+        action="approve",
+        entity_type="leave_plan_request",
+        entity_id=row.id,
+        summary=f"{current_user.email} approved a leave plan request for {row.owner.email}",
+    )
 
     session.add(row)
     session.commit()
@@ -301,6 +316,13 @@ def reject(
 
     NotificationService(session=session).notify_rejected(
         row=row, entity_type="leave_plan_request", actor=current_user
+    )
+    AuditService(session=session).record(
+        actor=current_user,
+        action="reject",
+        entity_type="leave_plan_request",
+        entity_id=row.id,
+        summary=f"{current_user.email} rejected a leave plan request for {row.owner.email}",
     )
 
     session.add(row)

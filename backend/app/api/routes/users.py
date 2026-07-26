@@ -12,6 +12,7 @@ from app.api.deps import (
 )
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
+from app.leave_services.audit_service import AuditService
 from app.models import (
     Item,
     Message,
@@ -48,10 +49,13 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     return UsersPublic(data=users, count=count)
 
 
-@router.post(
-    "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic
-)
-def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
+@router.post("/", response_model=UserPublic)
+def create_user(
+    *,
+    session: SessionDep,
+    user_in: UserCreate,
+    actor: User = Depends(get_current_active_superuser),
+) -> Any:
     """
     Create new user.
     """
@@ -72,6 +76,14 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
             )
 
     user = crud.create_user(session=session, user_create=user_in)
+    AuditService(session=session).record(
+        actor=actor,
+        action="create",
+        entity_type="user",
+        entity_id=user.id,
+        summary=f"{actor.email} created user {user.email}",
+    )
+    session.commit()
     if settings.emails_enabled and user_in.email:
         email_data = generate_new_account_email(
             email_to=user_in.email, username=user_in.email, password=user_in.password
@@ -182,16 +194,13 @@ def read_user_by_id(
     return user
 
 
-@router.patch(
-    "/{user_id}",
-    dependencies=[Depends(get_current_active_superuser)],
-    response_model=UserPublic,
-)
+@router.patch("/{user_id}", response_model=UserPublic)
 def update_user(
     *,
     session: SessionDep,
     user_id: uuid.UUID,
     user_in: UserUpdate,
+    actor: User = Depends(get_current_active_superuser),
 ) -> Any:
     """
     Update a user.
@@ -219,6 +228,14 @@ def update_user(
             )
 
     db_user = crud.update_user(session=session, db_user=db_user, user_in=user_in)
+    AuditService(session=session).record(
+        actor=actor,
+        action="update",
+        entity_type="user",
+        entity_id=db_user.id,
+        summary=f"{actor.email} updated user {db_user.email}",
+    )
+    session.commit()
     return db_user
 
 
@@ -236,8 +253,16 @@ def delete_user(
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
+    deleted_email = user.email
     statement = delete(Item).where(col(Item.owner_id) == user_id)
     session.exec(statement)  # type: ignore
     session.delete(user)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="delete",
+        entity_type="user",
+        entity_id=user_id,
+        summary=f"{current_user.email} deleted user {deleted_email}",
+    )
     session.commit()
     return Message(message="User deleted successfully")

@@ -13,6 +13,7 @@ from app.leave_models.leave_balance_model import (
     LeaveBalanceCreate,
     LeaveBalanceUpdate,
 )
+from app.leave_services.audit_service import AuditService
 from app.leave_services.balance_service import BalanceService
 
 from app.models import Message
@@ -100,6 +101,13 @@ def create(
     if not exists:
         row = LeaveBalance.model_validate(row_in)
         session.add(row)
+        AuditService(session=session).record(
+            actor=current_user,
+            action="create",
+            entity_type="leave_balance",
+            entity_id=row.id,
+            summary=f"{current_user.email} created a {year} leave balance ({row.balance}) for owner {owner_id}",
+        )
         session.commit()
         session.refresh(row)
         return row
@@ -144,6 +152,13 @@ def update(
     update_dict = row_in.model_dump(exclude_unset=True)
     row.sqlmodel_update(update_dict)
     session.add(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="update",
+        entity_type="leave_balance",
+        entity_id=row.id,
+        summary=f"{current_user.email} updated a {row.year} leave balance ({row.balance}) for owner {row.owner_id}",
+    )
     session.commit()
     session.refresh(row)
     return row
@@ -166,5 +181,12 @@ def delete(
         raise HTTPException(status_code=404, detail="Not found")
 
     session.delete(row)
+    AuditService(session=session).record(
+        actor=current_user,
+        action="delete",
+        entity_type="leave_balance",
+        entity_id=row.id,
+        summary=f"{current_user.email} deleted a {row.year} leave balance for owner {row.owner_id}",
+    )
     session.commit()
     return Message(message="Deleted successfully")
